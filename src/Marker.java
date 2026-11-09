@@ -12,7 +12,14 @@ public class Marker {
      */
     public static int[] prefixFunction(String p) {
         // TODO Mission 3a
-        return new int[p.length()];
+        int m = p.length();
+        int[] pi = new int[m];
+        for (int i = 1, k = 0; i < m; i++) {
+            while (k > 0 && p.charAt(i) != p.charAt(k)) k = pi[k - 1];
+            if (p.charAt(i) == p.charAt(k)) k++;
+            pi[i] = k;
+        }
+        return pi;
     }
 
     /**
@@ -23,7 +30,20 @@ public class Marker {
      */
     public static int[] findAll(String text, String p) {
         // TODO Mission 3b
-        return new int[0];
+        int m = p.length();
+        if (m == 0) return new int[0];
+        int[] pi = prefixFunction(p);
+        int[] tmp = new int[text.length()];
+        int cnt = 0, k = 0;
+        for (int i = 0; i < text.length(); i++) {
+            while (k > 0 && text.charAt(i) != p.charAt(k)) k = pi[k - 1];
+            if (text.charAt(i) == p.charAt(k)) k++;
+            if (k == m) {
+                tmp[cnt++] = i - m + 1;
+                k = pi[k - 1];
+            }
+        }
+        return java.util.Arrays.copyOf(tmp, cnt);
     }
 
     /**
