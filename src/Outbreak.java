@@ -18,7 +18,41 @@ public class Outbreak {
      */
     public static boolean[] cheapestTests(int n, int[][] nb, int[] cost) {
         // TODO Mission 5a
-        return new boolean[n];
+        int[] parent = new int[n];
+        int[] order = new int[n];                       // DFS order, parents before children
+        int cnt = 0;
+        Arrays.fill(parent, -2);
+        parent[0] = -1;
+        int[] stack = new int[n];
+        int top = 0;
+        stack[top++] = 0;
+        while (top > 0) {
+            int v = stack[--top];
+            order[cnt++] = v;
+            for (int c : nb[v]) if (parent[c] == -2) { parent[c] = v; stack[top++] = c; }
+        }
+        long[] take = new long[n], skip = new long[n];
+        for (int i = n - 1; i >= 0; i--) {              // children before parents
+            int v = order[i];
+            take[v] = cost[v];
+            skip[v] = 0;
+            for (int c : nb[v]) {
+                if (c == parent[v]) continue;
+                take[v] += Math.min(take[c], skip[c]);  // v tested: child is free to choose
+                skip[v] += take[c];                     // v not tested: child MUST be tested
+            }
+        }
+        boolean[] tested = new boolean[n];
+        tested[0] = take[0] <= skip[0];
+        for (int i = 0; i < n; i++) {                   // top-down: rebuild the choices
+            int v = order[i];
+            for (int c : nb[v]) {
+                if (c == parent[v]) continue;
+                if (!tested[v]) tested[c] = true;
+                else tested[c] = take[c] <= skip[c];
+            }
+        }
+        return tested;
     }
 
     /**
@@ -28,6 +62,33 @@ public class Outbreak {
      */
     public static int longestChain(int n, int[][] nb) {
         // TODO Mission 5b
-        return -1;
+        int[] parent = new int[n];
+        int[] order = new int[n];
+        int cnt = 0;
+        Arrays.fill(parent, -2);
+        parent[0] = -1;
+        int[] stack = new int[n];
+        int top = 0;
+        stack[top++] = 0;
+        while (top > 0) {
+            int v = stack[--top];
+            order[cnt++] = v;
+            for (int c : nb[v]) if (parent[c] == -2) { parent[c] = v; stack[top++] = c; }
+        }
+        int[] down = new int[n];                        // longest way down from v, in links
+        int best = 0;
+        for (int i = n - 1; i >= 0; i--) {
+            int v = order[i];
+            int d1 = 0, d2 = 0;                         // two longest ways down through different children
+            for (int c : nb[v]) {
+                if (c == parent[v]) continue;
+                int len = down[c] + 1;
+                if (len > d1) { d2 = d1; d1 = len; }
+                else if (len > d2) d2 = len;
+            }
+            down[v] = d1;
+            best = Math.max(best, d1 + d2);
+        }
+        return best;
     }
 }
