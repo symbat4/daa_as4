@@ -56,6 +56,39 @@ public class Marker {
      */
     public static int sharedWords(String a, String b, int k) {
         // TODO Mission 4
-        return -1;
+        int n = a.length(), m = b.length();
+        if (n < k || m < k || k <= 0) return 0;
+        final long MOD = 1_000_000_007L, BASE = 131;
+        long pow = 1;                                   // BASE^(k-1) mod MOD
+        for (int i = 1; i < k; i++) pow = pow * BASE % MOD;
+
+        // hashes of all windows of b: hash -> list of start positions
+        HashMap<Long, ArrayList<Integer>> map = new HashMap<>();
+        long h = 0;
+        for (int i = 0; i < k; i++) h = (h * BASE + b.charAt(i)) % MOD;
+        for (int j = 0; ; j++) {
+            map.computeIfAbsent(h, x -> new ArrayList<>()).add(j);
+            if (j + k >= m) break;
+            h = ((h - b.charAt(j) * pow % MOD + MOD) % MOD * BASE + b.charAt(j + k)) % MOD;
+        }
+
+        // rolling hash over a
+        int count = 0;
+        h = 0;
+        for (int i = 0; i < k; i++) h = (h * BASE + a.charAt(i)) % MOD;
+        for (int i = 0; ; i++) {
+            ArrayList<Integer> list = map.get(h);
+            if (list != null) {
+                for (int j : list) {                    // equal hash: COMPARE THE LETTERS
+                    boolean same = true;
+                    for (int t = 0; t < k; t++)
+                        if (a.charAt(i + t) != b.charAt(j + t)) { same = false; break; }
+                    if (same) { count++; break; }       // count the position once
+                }
+            }
+            if (i + k >= n) break;
+            h = ((h - a.charAt(i) * pow % MOD + MOD) % MOD * BASE + a.charAt(i + k)) % MOD;
+        }
+        return count;
     }
 }
